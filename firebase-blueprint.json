@@ -1,0 +1,311 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account preference and spiritual companion synchronization data",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The user unique ID matching auth.uid",
+          "maxLength": 128
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of the user",
+          "maxLength": 64
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address",
+          "maxLength": 128
+        },
+        "avatarFormId": {
+          "type": "string",
+          "description": "Current spiritual companion avatar form identifier",
+          "maxLength": 32
+        },
+        "sceneId": {
+          "type": "string",
+          "description": "Current spiritual space scene identifier",
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp in ISO format"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last updated timestamp in ISO format"
+        }
+      },
+      "required": ["uid", "avatarFormId", "sceneId"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Companion conversation logs saved for the user",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who owns this conversation message",
+          "maxLength": 128
+        },
+        "sender": {
+          "type": "string",
+          "description": "Sender identifier: 'user' or 'ai'",
+          "enum": ["user", "ai"]
+        },
+        "text": {
+          "type": "string",
+          "description": "Content of the dialogue message",
+          "maxLength": 2000
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the message was sent"
+        }
+      },
+      "required": ["userId", "sender", "text"]
+    },
+    "UserTrack": {
+      "title": "UserTrack",
+      "description": "Custom music track metadata or uploaded audio reference",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who uploaded or favorited the track",
+          "maxLength": 128
+        },
+        "title": {
+          "type": "string",
+          "description": "Track title",
+          "maxLength": 120
+        },
+        "artist": {
+          "type": "string",
+          "description": "Artist or performer name",
+          "maxLength": 80
+        },
+        "notes": {
+          "type": "string",
+          "description": "User notes or remarks for this track",
+          "maxLength": 500
+        },
+        "lastPlayedProgress": {
+          "type": "number",
+          "description": "Last playback progress in seconds"
+        },
+        "duration": {
+          "type": "number",
+          "description": "Duration in seconds"
+        },
+        "category": {
+          "type": "string",
+          "description": "Music genre category",
+          "maxLength": 40
+        },
+        "fileSize": {
+          "type": "string",
+          "description": "Formatted file size string",
+          "maxLength": 20
+        },
+        "synthPreset": {
+          "type": "string",
+          "description": "Synth preset identifier",
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["userId", "title", "artist"]
+    },
+    "StoryBookmark": {
+      "title": "StoryBookmark",
+      "description": "Philosophy story bookmarked by the user",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who bookmarked the story",
+          "maxLength": 128
+        },
+        "storyId": {
+          "type": "string",
+          "description": "Unique story identifier",
+          "maxLength": 64
+        },
+        "title": {
+          "type": "string",
+          "description": "Story title",
+          "maxLength": 120
+        },
+        "category": {
+          "type": "string",
+          "description": "Story category",
+          "maxLength": 40
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when bookmarked"
+        }
+      },
+      "required": ["userId", "storyId", "title"]
+    },
+    "UserStory": {
+      "title": "UserStory",
+      "description": "Philosophical lyrics-inspired stories generated for the user by Google Gemini AI",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who owns this story",
+          "maxLength": 128
+        },
+        "storyId": {
+          "type": "string",
+          "description": "Unique story identifier",
+          "maxLength": 64
+        },
+        "title": {
+          "type": "string",
+          "description": "Story title",
+          "maxLength": 120
+        },
+        "summary": {
+          "type": "string",
+          "description": "Story summary",
+          "maxLength": 300
+        },
+        "themeMoral": {
+          "type": "string",
+          "description": "Moral or philosophical reflection",
+          "maxLength": 300
+        },
+        "lyricsSource": {
+          "type": "string",
+          "description": "Source song name or lyrics excerpt",
+          "maxLength": 200
+        },
+        "category": {
+          "type": "string",
+          "description": "Story genre or category",
+          "maxLength": 60
+        },
+        "content": {
+          "type": "array",
+          "description": "Story narrative paragraphs"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when created"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when updated"
+        }
+      },
+      "required": ["userId", "storyId", "title", "summary", "themeMoral"]
+    },
+    "CrossIndexMatrix": {
+      "title": "CrossIndexMatrix",
+      "description": "Tri-index cross-modal content combination linking Google Music, Google Books, and YouTube",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who owns this matrix record",
+          "maxLength": 128
+        },
+        "matrixId": {
+          "type": "string",
+          "description": "Unique matrix combination ID",
+          "maxLength": 64
+        },
+        "combinationType": {
+          "type": "string",
+          "description": "Combination type: 单选, 两两组合, or 三者全组合",
+          "maxLength": 32
+        },
+        "theme": {
+          "type": "string",
+          "description": "Thematic concept unifying the cross-modal elements",
+          "maxLength": 160
+        },
+        "musicSummary": {
+          "type": "string",
+          "description": "Music content summary and emotional role",
+          "maxLength": 400
+        },
+        "googleMusicIndex": {
+          "type": "string",
+          "description": "Google Music resource identifier or anchor link",
+          "maxLength": 240
+        },
+        "storySummary": {
+          "type": "string",
+          "description": "Philosophy story content summary",
+          "maxLength": 400
+        },
+        "googleBooksIndex": {
+          "type": "string",
+          "description": "Google Books identifier or anchor link",
+          "maxLength": 240
+        },
+        "videoSummary": {
+          "type": "string",
+          "description": "Video memory content summary",
+          "maxLength": 400
+        },
+        "youtubeIndex": {
+          "type": "string",
+          "description": "YouTube video ID resource anchor",
+          "maxLength": 240
+        },
+        "coherenceCheck": {
+          "type": "string",
+          "description": "Thematic coherence validation confirmation",
+          "maxLength": 400
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp in ISO format"
+        }
+      },
+      "required": ["userId", "matrixId", "combinationType", "theme", "coherenceCheck"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile with avatar and scene choices"
+    },
+    "/users/{userId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Private companion conversation history"
+    },
+    "/users/{userId}/tracks/{trackId}": {
+      "schema": "UserTrack",
+      "description": "User custom music tracks in Fire element section"
+    },
+    "/users/{userId}/bookmarks/{bookmarkId}": {
+      "schema": "StoryBookmark",
+      "description": "User philosophy story bookmarks in Metal element section"
+    },
+    "/users/{userId}/stories/{storyId}": {
+      "schema": "UserStory",
+      "description": "Philosophical lyrics-inspired stories generated by Google Gemini robot"
+    },
+    "/users/{userId}/matrices/{matrixId}": {
+      "schema": "CrossIndexMatrix",
+      "description": "Tri-index combinations cross-referencing Google Music, Google Books, and YouTube"
+    }
+  }
+}

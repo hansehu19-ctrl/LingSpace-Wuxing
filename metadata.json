@@ -1,0 +1,7 @@
+{
+  "name": "灵伴空间",
+  "description": "以五行相生（土·木·火·金·水）为架构的心灵数字空间，汇聚灵性空间、日常交互、乐律心声、哲理故事与影像载忆。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

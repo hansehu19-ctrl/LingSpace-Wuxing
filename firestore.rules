@@ -1,0 +1,220 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny-all safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Entity validation helpers
+    function isValidUserProfile(data, userId) {
+      return data.uid == userId &&
+        data.uid is string && data.uid.size() <= 128 &&
+        data.avatarFormId is string && data.avatarFormId.size() <= 32 &&
+        data.sceneId is string && data.sceneId.size() <= 32 &&
+        (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 64)) &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 128)) &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 64)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidChatMessage(data, userId) {
+      return data.userId == userId &&
+        data.userId is string && data.userId.size() <= 128 &&
+        (data.sender == 'user' || data.sender == 'ai') &&
+        data.text is string && data.text.size() > 0 && data.text.size() <= 2000 &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 64));
+    }
+
+    function isValidUserTrack(data, userId) {
+      return data.userId == userId &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 120 &&
+        data.artist is string && data.artist.size() > 0 && data.artist.size() <= 80 &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+        (!('lastPlayedProgress' in data) || (data.lastPlayedProgress is number && data.lastPlayedProgress >= 0 && data.lastPlayedProgress <= 86400)) &&
+        (!('duration' in data) || (data.duration is number && data.duration >= 0 && data.duration <= 86400)) &&
+        (!('category' in data) || (data.category is string && data.category.size() <= 40)) &&
+        (!('fileSize' in data) || (data.fileSize is string && data.fileSize.size() <= 20)) &&
+        (!('synthPreset' in data) || (data.synthPreset is string && data.synthPreset.size() <= 32)) &&
+        (!('lyrics' in data) || (data.lyrics is list && data.lyrics.size() <= 200)) &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 64)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidStoryBookmark(data, userId) {
+      return data.userId == userId &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.storyId is string && data.storyId.size() > 0 && data.storyId.size() <= 64 &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 120 &&
+        (!('category' in data) || (data.category is string && data.category.size() <= 40)) &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 64));
+    }
+
+    function isValidUserStory(data, userId) {
+      return data.userId == userId &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.storyId is string && data.storyId.size() > 0 && data.storyId.size() <= 64 &&
+        data.title is string && data.title.size() > 0 && data.title.size() <= 120 &&
+        data.summary is string && data.summary.size() <= 300 &&
+        data.themeMoral is string && data.themeMoral.size() <= 300 &&
+        (!('lyricsSource' in data) || (data.lyricsSource is string && data.lyricsSource.size() <= 200)) &&
+        (!('category' in data) || (data.category is string && data.category.size() <= 60)) &&
+        data.content is list && data.content.size() <= 20 &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 64)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidCrossIndexMatrix(data, userId) {
+      return data.userId == userId &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.matrixId is string && data.matrixId.size() > 0 && data.matrixId.size() <= 64 &&
+        data.combinationType is string && data.combinationType.size() <= 32 &&
+        data.theme is string && data.theme.size() > 0 && data.theme.size() <= 160 &&
+        (!('musicSummary' in data) || (data.musicSummary is string && data.musicSummary.size() <= 400)) &&
+        (!('googleMusicIndex' in data) || (data.googleMusicIndex is string && data.googleMusicIndex.size() <= 240)) &&
+        (!('storySummary' in data) || (data.storySummary is string && data.storySummary.size() <= 400)) &&
+        (!('googleBooksIndex' in data) || (data.googleBooksIndex is string && data.googleBooksIndex.size() <= 240)) &&
+        (!('videoSummary' in data) || (data.videoSummary is string && data.videoSummary.size() <= 400)) &&
+        (!('youtubeIndex' in data) || (data.youtubeIndex is string && data.youtubeIndex.size() <= 240)) &&
+        data.coherenceCheck is string && data.coherenceCheck.size() <= 400 &&
+        (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 64));
+    }
+
+    // Connection test document
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // User Profile Document
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false; // Profiles cannot be enumerated
+
+      allow create: if isOwner(userId) &&
+        isValidId(userId) &&
+        incoming().keys().hasAll(['uid', 'avatarFormId', 'sceneId']) &&
+        incoming().keys().hasOnly(['uid', 'displayName', 'email', 'avatarFormId', 'sceneId', 'createdAt', 'updatedAt']) &&
+        isValidUserProfile(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+        isValidId(userId) &&
+        isValidUserProfile(incoming(), userId) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['uid', 'avatarFormId', 'sceneId', 'displayName', 'email', 'createdAt', 'updatedAt']);
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      // Chat Messages Subcollection
+      match /messages/{messageId} {
+        allow get: if isOwner(userId) && isValidId(messageId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidId(messageId) &&
+          incoming().keys().hasAll(['userId', 'sender', 'text']) &&
+          incoming().keys().hasOnly(['userId', 'sender', 'text', 'createdAt']) &&
+          isValidChatMessage(incoming(), userId);
+
+        allow update: if false; // Messages are append-only / immutable
+        allow delete: if isOwner(userId) && isValidId(messageId);
+      }
+
+      // User Music Tracks Subcollection
+      match /tracks/{trackId} {
+        allow get: if isOwner(userId) && isValidId(trackId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidId(trackId) &&
+          incoming().keys().hasAll(['userId', 'title', 'artist']) &&
+          incoming().keys().hasOnly(['userId', 'title', 'artist', 'notes', 'lastPlayedProgress', 'duration', 'category', 'fileSize', 'synthPreset', 'lyrics', 'createdAt', 'updatedAt']) &&
+          isValidUserTrack(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+          isValidId(trackId) &&
+          incoming().userId == existing().userId &&
+          isValidUserTrack(incoming(), userId) &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'artist', 'notes', 'lastPlayedProgress', 'duration', 'category', 'fileSize', 'synthPreset', 'lyrics', 'createdAt', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(trackId);
+      }
+
+      // Bookmarked Stories Subcollection
+      match /bookmarks/{bookmarkId} {
+        allow get: if isOwner(userId) && isValidId(bookmarkId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidId(bookmarkId) &&
+          incoming().keys().hasAll(['userId', 'storyId', 'title']) &&
+          incoming().keys().hasOnly(['userId', 'storyId', 'title', 'category', 'createdAt']) &&
+          isValidStoryBookmark(incoming(), userId);
+
+        allow update: if false; // Bookmarks are create/delete only
+        allow delete: if isOwner(userId) && isValidId(bookmarkId);
+      }
+
+      // Generated Philosophical Stories Subcollection
+      match /stories/{storyId} {
+        allow get: if isOwner(userId) && isValidId(storyId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidId(storyId) &&
+          incoming().keys().hasAll(['userId', 'storyId', 'title', 'summary', 'themeMoral', 'content']) &&
+          incoming().keys().hasOnly(['userId', 'storyId', 'title', 'summary', 'themeMoral', 'content', 'lyricsSource', 'category', 'createdAt', 'updatedAt']) &&
+          isValidUserStory(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+          isValidId(storyId) &&
+          incoming().userId == existing().userId &&
+          isValidUserStory(incoming(), userId) &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'summary', 'themeMoral', 'content', 'lyricsSource', 'category', 'updatedAt']);
+
+        allow delete: if isOwner(userId) && isValidId(storyId);
+      }
+
+      // Cross-Index Matrix Combinations Subcollection
+      match /matrices/{matrixId} {
+        allow get: if isOwner(userId) && isValidId(matrixId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidId(matrixId) &&
+          incoming().keys().hasAll(['userId', 'matrixId', 'combinationType', 'theme', 'coherenceCheck']) &&
+          incoming().keys().hasOnly(['userId', 'matrixId', 'combinationType', 'theme', 'musicSummary', 'googleMusicIndex', 'storySummary', 'googleBooksIndex', 'videoSummary', 'youtubeIndex', 'coherenceCheck', 'createdAt']) &&
+          isValidCrossIndexMatrix(incoming(), userId);
+
+        allow update: if isOwner(userId) &&
+          isValidId(matrixId) &&
+          incoming().userId == existing().userId &&
+          isValidCrossIndexMatrix(incoming(), userId) &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['combinationType', 'theme', 'musicSummary', 'googleMusicIndex', 'storySummary', 'googleBooksIndex', 'videoSummary', 'youtubeIndex', 'coherenceCheck']);
+
+        allow delete: if isOwner(userId) && isValidId(matrixId);
+      }
+    }
+  }
+}
